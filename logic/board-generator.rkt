@@ -1,4 +1,5 @@
 #lang racket/gui
+#lang racket
 ; Solo pruebas para generar listas, no implementado con parte grafica
 (define (randomlist length mx)
   (for/list ((i length))
