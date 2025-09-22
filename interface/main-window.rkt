@@ -1,68 +1,37 @@
 #lang racket/gui
 
-; importar la logica del tablero
-(require "../logic/board-generator.rkt")
+; importar pantallas
+(require "config-screen.rkt")
+(require "game-screen.rkt")
 
-;Variables
-(define ancho 300)
-(define largo 300)
-
-; crear el tablero usando la logica
-(define mi-tablero (tablero 5 5 8))
-
-#|Ventana|#
-; Titulo
+; ventana principal
 (define frame (new frame%
                    [label "BusCEMinas"]
-                   [width ancho]
-                   [height largo]))
+                   [width 350]
+                   [height 430]))
 
-;Contenedor de regiones de la ventana
-(define container (new vertical-panel%
-                       [parent frame]))
+; contenedor para las pantallas
+(define container (new panel%
+                      [parent frame]))
 
-;Parte de arriba de la ventana
-(define upper-half (new horizontal-panel%
-                        [parent container]
-                        (min-width 300)
-                        (min-height 50)))
+; funcion para limpiar contenedor
+(define (limpiar-contenedor)
+  (for-each (lambda (child)
+              (send child show #f))
+            (send container get-children)))
 
-;Parte de abajo de la ventana (Zona de las celdas)
-(define lower-half (new horizontal-panel%
-                        [parent container]
-                        (min-width 300)
-                        (min-height 200)))
+; funcion para ir al juego
+(define (ir-a-juego)
+  (limpiar-contenedor)
+  (crear-pantalla-juego container volver-a-config))
 
-; Parte superior del juego 
-(new canvas% [parent upper-half]
-             [paint-callback
-              (lambda (canvas dc1)
-                ;(send dc1 set-canvas-background "green")
-                (send dc1 set-scale 3 3)
-                (send dc1 set-text-foreground "blue")
-                (send dc1 draw-text "BusCEMinas!" 0 0))])
+; funcion para volver a configuración
+(define (volver-a-config)
+  (limpiar-contenedor)
+  (crear-pantalla-config container ir-a-juego))
 
+; iniciar con pantalla de configuracion
+(crear-pantalla-config container ir-a-juego)
 
-;Generador de celdas
-
-(define celdas 
-  (for ([i (in-range 5)])
-    (define col-panel (new vertical-panel% [parent lower-half]))
-    (for ([j (in-range 5)])
-      ; obtener la celda correspondiente del tablero
-      (define indice (+ (* i 5) j))
-      (define celda-datos (list-ref mi-tablero indice))
-      (define es-mina (mine celda-datos))
-      (define num-adyacentes (second celda-datos))
-      
-      (new button%
-           [horiz-margin 0]
-           [label (format "celda~a" i)]
-           [parent col-panel]
-           [callback (lambda (b event)
-                       ; Aa hacer clic, mostrar los datos reales de la celda
-                       (if (= es-mina 1)
-                           (send b set-label "MINA")
-                           (send b set-label (number->string num-adyacentes))))]))))
-
+; mostrar ventana
 (send frame show #t)
