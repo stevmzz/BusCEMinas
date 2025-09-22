@@ -8,7 +8,7 @@
 (define frame (new frame%
                    [label "BusCEMinas"]
                    [width 350]
-                   [height 430]))
+                   [height 950]))
 
 ; contenedor para las pantallas
 (define container (new panel%

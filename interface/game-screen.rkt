@@ -7,8 +7,11 @@
 (provide crear-pantalla-juego)
 (define (crear-pantalla-juego parent-container callback-volver)
 
+; tamaño temporal del tablero
+(define tamaño 12)
+
 ; crear el tablero usando la logica
-(define mi-tablero (tablero 5 5 2))
+(define mi-tablero (tablero tamaño tamaño 2))
 
 ; panel principal
 (define game-panel (new vertical-panel%
@@ -34,25 +37,30 @@
 (new canvas% [parent upper-half]
              [paint-callback
               (lambda (canvas dc1)
+                (send dc1 set-pen "gray" 0 'transparent)
+                (send dc1 set-brush "gray" 'solid)
+                (send dc1 draw-rectangle 0 0 800 200)
                 (send dc1 set-scale 3 3)
-                (send dc1 set-text-foreground "blue")
+                (send dc1 set-text-foreground "black")
                 (send dc1 draw-text "BusCEMinas!" 0 0))])
 
 ; generador de celdas
 (define celdas 
-  (for ([i (in-range 5)])
+  (for ([i (in-range tamaño)])
     (define col-panel (new vertical-panel% [parent lower-half]))
-    (for ([j (in-range 5)])
+    (for ([j (in-range tamaño)])
       ; obtener la celda correspondiente del tablero
-      (define indice (+ (* i 5) j))
+      (define indice (+ (* i tamaño) j))
       (define celda-datos (list-ref mi-tablero indice))
       (define es-mina (mine celda-datos))
       (define num-adyacentes (second celda-datos))
       
       (new button%
            [horiz-margin 0]
-           [label (format "celda~a" i)]
+           [vert-margin 0] 
+           [label ""]
            [parent col-panel]
+           [min-height 60]
            [callback (lambda (b event)
                        ; al hacer clic, mostrar los datos reales de la celda
                        (if (= es-mina 1)
