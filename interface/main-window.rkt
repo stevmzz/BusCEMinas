@@ -1,7 +1,14 @@
 #lang racket/gui
+
+; importar la logica del tablero
+(require "../logic/board-generator.rkt")
+
 ;Variables
 (define ancho 300)
 (define largo 300)
+
+; crear el tablero usando la logica
+(define mi-tablero (tablero 5 5 8))
 
 #|Ventana|#
 ; Titulo
@@ -42,11 +49,20 @@
   (for ([i (in-range 5)])
     (define col-panel (new vertical-panel% [parent lower-half]))
     (for ([j (in-range 5)])
+      ; obtener la celda correspondiente del tablero
+      (define indice (+ (* i 5) j))
+      (define celda-datos (list-ref mi-tablero indice))
+      (define es-mina (mine celda-datos))
+      (define num-adyacentes (second celda-datos))
+      
       (new button%
            [horiz-margin 0]
            [label (format "celda~a" i)]
            [parent col-panel]
            [callback (lambda (b event)
-                       (send b set-label "clicked"))]))))
+                       ; Aa hacer clic, mostrar los datos reales de la celda
+                       (if (= es-mina 1)
+                           (send b set-label "MINA")
+                           (send b set-label (number->string num-adyacentes))))]))))
 
 (send frame show #t)

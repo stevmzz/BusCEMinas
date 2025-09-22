@@ -1,5 +1,8 @@
 #lang racket/gui
-#lang racket
+
+; exportar todas las funciones
+(provide (all-defined-out))
+
 ; Solo pruebas para generar listas, no implementado con parte grafica
 (define (randomlist length mx)
   (for/list ((i length))
