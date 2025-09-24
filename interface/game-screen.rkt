@@ -7,12 +7,15 @@
 (provide crear-pantalla-juego)
 (define (crear-pantalla-juego parent-container callback-volver)
 
+; variable global de dificultad
+ (define dificultad 'facil) ; puede ser 'facil, 'medio o 'dificil
+  
 ; tamaño temporal del tablero
 (define tamaño 12)
 
 ; crear el tablero usando la logica
-(define mi-tablero (tablero tamaño tamaño 2))
-
+(define mi-tablero (tablero tamaño tamaño dificultad))
+  
 ; panel principal
 (define game-panel (new vertical-panel%
                          [parent parent-container]))
