@@ -2,19 +2,21 @@
 
 ; importar la logica del tablero
 (require "../logic/board-generator.rkt")
+(require "../interface/config-screen.rkt")
 
 ; funcion para crear la pantalla del juego
 (provide crear-pantalla-juego)
 (define (crear-pantalla-juego parent-container callback-volver)
 
 ; variable global de dificultad
- (define dificultad 'facil) ; puede ser 'facil, 'medio o 'dificil
+(define dificultad dificultad_escogida) ; puede ser 'facil, 'medio o 'dificil
   
 ; tamaño temporal del tablero
-(define tamaño 12)
+(define tamaño_filas (string->number filas_escogidas))
+(define tamaño_columnas (string->number columnas_escogidas))
 
 ; crear el tablero usando la logica
-(define mi-tablero (tablero tamaño tamaño dificultad))
+(define mi-tablero (tablero tamaño_filas tamaño_columnas dificultad))
   
 ; panel principal
 (define game-panel (new vertical-panel%
@@ -49,11 +51,11 @@
 
 ; generador de celdas
 (define celdas 
-  (for ([i (in-range tamaño)])
+  (for ([i (in-range tamaño_columnas)])
     (define col-panel (new vertical-panel% [parent lower-half]))
-    (for ([j (in-range tamaño)])
+    (for ([j (in-range tamaño_filas)])
       ; obtener la celda correspondiente del tablero
-      (define indice (+ (* i tamaño) j))
+      (define indice (+ (* i tamaño_filas) j))
       (define celda-datos (list-ref mi-tablero indice))
       (define es-mina (mine celda-datos))
       (define num-adyacentes (second celda-datos))

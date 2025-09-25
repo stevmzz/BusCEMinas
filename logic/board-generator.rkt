@@ -49,10 +49,10 @@
 (define (tablero filas columnas nivel)
   (define total (* filas columnas))
   (define porcentaje
-    (case nivel
-      [(facil fácil easy) 0.10]
-      [(medio medium) 0.15]
-      [(dificil difícil hard) 0.20]
+    (cond
+      [(equal? nivel "facil") 0.10]
+      [(equal? nivel "medio") 0.15]
+      [(equal? nivel "dificil") 0.20]
       [else (error "Nivel no reconocido: use 'facil, 'medio o 'dificil")]))
   (define num-minas (max 1 (round (* total porcentaje))))
   (let ([t (crear-tablero filas columnas)])
