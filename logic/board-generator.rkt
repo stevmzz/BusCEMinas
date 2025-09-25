@@ -2,50 +2,129 @@
 
 (provide (all-defined-out))
 
-; Crear tablero vacío
+
+; Crear tablero vacío (Lista de celdas)
 (define (crear-tablero filas columnas)
-  (make-vector (* filas columnas) (list 0 0)))
+  (define total (* filas columnas))
+  
+  ; Función  para construir la lista de tamaño N
+  (define (construir-lista n)
+    (cond
+      [(= n 0) '()]
+      [else (cons (list 0 0) (construir-lista (sub1 n)))]))
 
-; Colocar minas aleatorias
+  (construir-lista total))
+
+; Devuelve si una celda (list 1 0) o (list 0 N) tiene una mina (1).
+(define (mine celda)
+  (first celda))
+
+; Obtener el elemento en el índice 
+(define (elemento lista index)
+  (cond
+    [(null? lista) (error "Índice fuera de límites")]
+    [(= index 0) (car lista)]
+    [else (elemento (cdr lista) (sub1 index))]))
+
+; Reemplazar un elemento en una lista por índice
+(define (reemplazar-en-lista lst index new-element)
+  (cond
+    [(null? lst) '()]
+    [(= index 0) (cons new-element (cdr lst))]
+    [else (cons (car lst) (reemplazar-en-lista (cdr lst) (sub1 index) new-element))]))
+
+; Colocar minas aleatorias 
 (define (colocar-minas tablero filas columnas num-minas)
-  (let loop ((n num-minas))
-    (if (= n 0)
-        tablero
-        (let* ([pos (random (* filas columnas))]
-               [celda (vector-ref tablero pos)])
-          (if (= (first celda) 1) ; ya hay mina en esa celda
-              (loop n)
-              (begin
-                (vector-set! tablero pos (list 1 0))
-                (loop (sub1 n))))))))
+  (define total (* filas columnas))
 
-; Vecinos válidos de una celda
+  ; Función para colocar N minas
+  (define (colocar-n-minas n current-tablero)
+    (cond
+      [(= n 0) current-tablero] 
+      [else 
+        (define pos (random total))
+        (define celda (elemento current-tablero pos)) 
+
+        (cond
+          [(= (mine celda) 1) 
+           (colocar-n-minas n current-tablero)]
+          [else 
+           (colocar-n-minas (sub1 n) (reemplazar-en-lista current-tablero pos (list 1 0)))]
+        )]))
+  
+  (colocar-n-minas num-minas tablero))
+
+
+; Vecinos válidos de una celda 
 (define (vecinos i j filas columnas)
   (define desplazamientos '((-1 -1) (-1 0) (-1 1)
-                            (0 -1)           (0 1)
-                            (1 -1)  (1 0)  (1 1)))
-  (for/list ([d desplazamientos]
-             #:when (and (<= 0 (+ i (first d)) (sub1 filas))
-                         (<= 0 (+ j (second d)) (sub1 columnas))))
-    (list (+ i (first d)) (+ j (second d)))))
+                             (0 -1)          (0 1)
+                             (1 -1)  (1 0)  (1 1)))
+                             
+  (define (recorrer-desplazamientos lista-d)
+    (cond
+      [(null? lista-d) '()]
+      [else
+       (define d (car lista-d))
+       (define ni (+ i (first d)))
+       (define nj (+ j (second d)))
+       
+       (cond
+         [(and (<= 0 ni (sub1 filas))
+               (<= 0 nj (sub1 columnas)))
+          (cons (list ni nj) (recorrer-desplazamientos (cdr lista-d)))]
+         [else
+          (recorrer-desplazamientos (cdr lista-d))]
+       )]))
+       
+  (recorrer-desplazamientos desplazamientos))
 
-; Calcular adyacentes
+; Auxiliar: Cuenta las minas vecinas 
+(define (contar-minas-vecinas tablero lista-vecinos columnas)
+  (cond
+    [(null? lista-vecinos) 0]
+    [else
+      (define v (car lista-vecinos))
+      (define vi (first v))
+      (define vj (second v))
+      (define pos (+ (* vi columnas) vj))
+      
+      (define celda-vecina (elemento tablero pos)) 
+      
+      (+ (cond [(= (mine celda-vecina) 1) 1] [else 0])
+         (contar-minas-vecinas tablero (cdr lista-vecinos) columnas))]
+    ))
+
+; Calcular adyacentes 
 (define (calcular-adyacentes tablero filas columnas)
-  (for* ([i (in-range filas)]
-         [j (in-range columnas)])
-    (let* ([idx (+ (* i columnas) j)]
-           [celda (vector-ref tablero idx)])
-      (unless (= (first celda) 1) ; si no es mina
-        (define count
-          (for/sum ([v (vecinos i j filas columnas)])
-            (let* ([vi (first v)]
-                   [vj (second v)]
-                   [pos (+ (* vi columnas) vj)])
-              (if (= (first (vector-ref tablero pos)) 1) 1 0))))
-        (vector-set! tablero idx (list 0 count)))))
-  tablero)
+  (define total (* filas columnas))
+  
+  ; Función para iterar sobre todos los índices del tablero
+  (define (iterar-tablero idx current-tablero)
+    (cond
+      [(= idx total) current-tablero] 
+      [else
+        (define i (quotient idx columnas))
+        (define j (remainder idx columnas))
+        (define celda (elemento current-tablero idx))
+        
+        (cond
+          [(= (mine celda) 1) 
+           (iterar-tablero (add1 idx) current-tablero)]
+          [else 
+           (define vecinos-coords (vecinos i j filas columnas))
+           (define count (contar-minas-vecinas current-tablero vecinos-coords columnas))
+           (define nueva-celda (list 0 count))
+           
+           (define nuevo-tablero-actualizado 
+             (reemplazar-en-lista current-tablero idx nueva-celda))
+             
+           (iterar-tablero (add1 idx) nuevo-tablero-actualizado)]
+        )]))
+        
+  (iterar-tablero 0 tablero)) 
 
-; Función tablero principal
+; Función tablero principal 
 (define (tablero filas columnas nivel)
   (define total (* filas columnas))
   (define porcentaje
@@ -55,11 +134,9 @@
       [(equal? nivel "dificil") 0.20]
       [else (error "Nivel no reconocido: use 'facil, 'medio o 'dificil")]))
   (define num-minas (max 1 (round (* total porcentaje))))
-  (let ([t (crear-tablero filas columnas)])
-    (colocar-minas t filas columnas num-minas)
-    (calcular-adyacentes t filas columnas)
-    (vector->list t)))
-
-; Auxiliar para saber si hay mina
-(define (mine celda)
-  (first celda))
+  
+  ; El pipeline funcional
+  (define tablero-vacio (crear-tablero filas columnas))
+  (define tablero-con-minas (colocar-minas tablero-vacio filas columnas num-minas))
+  (calcular-adyacentes tablero-con-minas filas columnas))
+  
