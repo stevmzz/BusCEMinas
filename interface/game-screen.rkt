@@ -84,7 +84,11 @@
                                       (begin
                                         (send b set-label "MINA")
                                         (message-box "¡GAME OVER!" "¡Encontraste una mina!" #f '(ok)))
-                                      (send b set-label (number->string num-adyacentes)))]
+                                      (begin
+                                        (send b set-label (number->string num-adyacentes))
+                                        ; si tiene 0 minas adyacentes, descubrir automaticamente vecinos
+                                        (when (= num-adyacentes 0)
+                                          (auto-descubrir-vecinos indice celdas))))]
                                 [(equal? respuesta 2) ; si el usuario eligió bandera
                                   (send b set-label "F")])]
                               [else ; si ya está descubierta, no hacer nada
@@ -106,6 +110,53 @@
 ; generador de celdas
 (define celdas 
   (crear-todas-columnas 0 tamaño_columnas tamaño_filas lower-half mi-tablero))
+
+; funcion para obtener un botón especifico de la matriz de botones
+(define (obtener-boton celdas indice tamaño_filas)
+  (define fila (quotient indice tamaño_filas))
+  (define col (remainder indice tamaño_filas))
+  (define lista-columna (elemento celdas fila))
+  (elemento lista-columna col))
+
+; funcion recursiva para descubrir automaticamente celdas vecinas
+(define (auto-descubrir-vecinos indice-inicial celdas)
+  (define fila (quotient indice-inicial tamaño_columnas))
+  (define col (remainder indice-inicial tamaño_filas))
+  
+  ; obtener coordenadas de vecinos usando la funcion existente
+  (define vecinos-coords (vecinos fila col tamaño_filas tamaño_columnas))
+  
+  ; funcion auxiliar para procesar cada vecino
+  (define (procesar-vecino vecino-coord)
+    (define v-fila (first vecino-coord))
+    (define v-col (second vecino-coord))
+    (define v-indice (+ (* v-fila tamaño_filas) v-col))
+    (define v-boton (obtener-boton celdas v-indice tamaño_filas))
+    (define v-label (send v-boton get-label))
+    
+    ; si no está descubierto, descubrirlo
+    (when (equal? v-label "")
+      (define v-celda (elemento mi-tablero v-indice))
+      (define v-es-mina (mine v-celda))
+      (define v-adyacentes (second v-celda))
+      
+      ; solo descubrir si no es mina
+      (when (= v-es-mina 0)
+        (send v-boton set-label (number->string v-adyacentes))
+        
+        ; si tambien tiene 0 adyacentes, continuar recursion
+        (when (= v-adyacentes 0)
+          (auto-descubrir-vecinos v-indice celdas)))))
+  
+  ; procesar todos los vecinos
+  (define (procesar-lista-vecinos lista-vecinos)
+    (cond
+      [(null? lista-vecinos) (void)]
+      [else
+       (procesar-vecino (car lista-vecinos))
+       (procesar-lista-vecinos (cdr lista-vecinos))]))
+  
+  (procesar-lista-vecinos vecinos-coords))
 
 ; retornar el panel
   game-panel)
