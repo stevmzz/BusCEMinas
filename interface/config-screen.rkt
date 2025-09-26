@@ -4,10 +4,6 @@
 (provide crear-pantalla-config)
 (provide (all-defined-out))
 
-(define filas_escogidas #f)
-(define columnas_escogidas #f)
-(define dificultad_escogida #f)
-
 ;Lista de opciones para tamaño de tablero y dificultad
 
 (define tamaño_tablero '("8" "9" "10" "11" "12" "13" "14" "15"))
@@ -38,7 +34,7 @@
    ; Menu para escoger el tamaño de las columnas del tablero
   (define tablero_dificultad (new choice%
                           [parent config-panel]
-                          [label "columnas"]
+                          [label "dificultad"]
                           [style '(vertical-label)] 
                           [choices opciones_dificultad]))
 
@@ -56,17 +52,12 @@
                                 (define filas_indice (send celdas_filas get-selection))
                                 (define columnas_indice (send celdas_columnas get-selection))
                                 (define dificultad_indice (send tablero_dificultad get-selection))
-
                                 
                                 (define filas_tamaño (elemento tamaño_tablero filas_indice))
                                 (define columnas_tamaño (elemento tamaño_tablero columnas_indice))
                                 (define dificultad (elemento opciones_dificultad dificultad_indice))
 
-                               
-                                (set! filas_escogidas filas_tamaño)
-                                (set! columnas_escogidas columnas_tamaño)
-                                (set! dificultad_escogida dificultad)
-                                (callback-boton))]))
+                                (callback-boton filas_tamaño columnas_tamaño dificultad))]))
 
 
 

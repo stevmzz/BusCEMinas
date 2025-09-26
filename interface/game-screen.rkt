@@ -6,15 +6,9 @@
 
 ; funcion para crear la pantalla del juego
 (provide crear-pantalla-juego)
-(define (crear-pantalla-juego parent-container callback-volver)
-
-; variable global de dificultad
-(define dificultad dificultad_escogida) ; puede ser 'facil, 'medio o 'dificil
-  
-; tamaño temporal del tablero
-(define tamaño_filas (string->number filas_escogidas))
-(define tamaño_columnas (string->number columnas_escogidas))
-
+(define (crear-pantalla-juego parent-container callback-volver filas columnas dificultad)
+(define tamaño_filas (string->number filas))
+(define tamaño_columnas (string->number columnas))
 ; crear el tablero usando la logica
 (define mi-tablero (tablero tamaño_filas tamaño_columnas dificultad))
   
@@ -49,28 +43,51 @@
                 (send dc1 set-text-foreground "black")
                 (send dc1 draw-text "BusCEMinas!" 0 0))])
 
+; funcion auxiliar para generar una secuencia de numeros
+(define (rango-lista inicio fin)
+  (cond
+    [(>= inicio fin) '()]
+    [else (cons inicio (rango-lista (+ inicio 1) fin))]))
+
+; funcion para crear botones de una columna
+(define (crear-botones-columna col-panel i tamaño_filas mi-tablero)
+  (define (crear-boton-fila j)
+    (cond
+      [(>= j tamaño_filas) '()]
+      [else
+       (define indice (+ (* i tamaño_filas) j))
+       (define celda-datos (elemento mi-tablero indice))
+       (define es-mina (mine celda-datos))
+       (define num-adyacentes (second celda-datos))
+       
+       (cons (new button%
+                  [horiz-margin 0]
+                  [vert-margin 0] 
+                  [label ""]
+                  [parent col-panel]
+                  [min-height 60]
+                  [callback (lambda (b event)
+                            ; al hacer clic, mostrar los datos reales de la celda
+                            (if (= es-mina 1)
+                                (send b set-label "MINA")
+                                (send b set-label (number->string num-adyacentes))))])
+             (crear-boton-fila (+ j 1)))]))
+  
+  (crear-boton-fila 0))
+
+; funcion para crear todas las columnas
+(define (crear-todas-columnas i tamaño_columnas tamaño_filas lower-half mi-tablero)
+  (cond
+    [(>= i tamaño_columnas) '()]
+    [else
+     (define col-panel (new vertical-panel% [parent lower-half]))
+     (define botones-columna (crear-botones-columna col-panel i tamaño_filas mi-tablero))
+     (cons botones-columna 
+           (crear-todas-columnas (+ i 1) tamaño_columnas tamaño_filas lower-half mi-tablero))]))
+
 ; generador de celdas
 (define celdas 
-  (for ([i (in-range tamaño_columnas)])
-    (define col-panel (new vertical-panel% [parent lower-half]))
-    (for ([j (in-range tamaño_filas)])
-      ; obtener la celda correspondiente del tablero
-      (define indice (+ (* i tamaño_filas) j))
-      (define celda-datos (list-ref mi-tablero indice))
-      (define es-mina (mine celda-datos))
-      (define num-adyacentes (second celda-datos))
-      
-      (new button%
-           [horiz-margin 0]
-           [vert-margin 0] 
-           [label ""]
-           [parent col-panel]
-           [min-height 60]
-           [callback (lambda (b event)
-                       ; al hacer clic, mostrar los datos reales de la celda
-                       (if (= es-mina 1)
-                           (send b set-label "MINA")
-                           (send b set-label (number->string num-adyacentes))))]))))
+  (crear-todas-columnas 0 tamaño_columnas tamaño_filas lower-half mi-tablero))
 
 ; retornar el panel
   game-panel)

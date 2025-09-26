@@ -14,16 +14,22 @@
 (define container (new panel%
                       [parent frame]))
 
+; funcion auxiliar recursiva para procesar la lista
+(define (ocultar-hijos lista-hijos)
+  (cond
+    [(null? lista-hijos) #t]
+    [else
+     (send (car lista-hijos) show #f) 
+     (ocultar-hijos (cdr lista-hijos))]))
+
 ; funcion para limpiar contenedor
 (define (limpiar-contenedor)
-  (for-each (lambda (child)
-              (send child show #f))
-            (send container get-children)))
+  (ocultar-hijos (send container get-children)))
 
 ; funcion para ir al juego
-(define (ir-a-juego)
+(define (ir-a-juego filas columnas dificultad)
   (limpiar-contenedor)
-  (crear-pantalla-juego container volver-a-config))
+  (crear-pantalla-juego container volver-a-config filas columnas dificultad))
 
 ; funcion para volver a configuración
 (define (volver-a-config)
