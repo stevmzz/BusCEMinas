@@ -140,3 +140,11 @@
   (define tablero-con-minas (colocar-minas tablero-vacio filas columnas num-minas))
   (calcular-adyacentes tablero-con-minas filas columnas))
   
+; Función para contar el total de minas en un tablero generado
+(define (contar-minas-tablero tablero)
+  (cond
+    [(null? tablero) 0]
+    [else
+     (define celda (car tablero))
+     (define es-mina (mine celda))
+     (+ es-mina (contar-minas-tablero (cdr tablero)))]))

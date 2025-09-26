@@ -11,6 +11,7 @@
 (define tamaño_columnas (string->number columnas))
 ; crear el tablero usando la logica
 (define mi-tablero (tablero tamaño_filas tamaño_columnas dificultad))
+(define total-minas (contar-minas-tablero mi-tablero))
   
 ; panel principal
 (define game-panel (new vertical-panel%
@@ -32,16 +33,26 @@
                         (min-width 0)
                         (min-height 0)))
 
+; Panel para título y contador
+(define info-panel (new vertical-panel% [parent upper-half]))
+
 ; parte superior del juego 
-(new canvas% [parent upper-half]
+(new canvas% [parent info-panel]
+             [min-height 100]
              [paint-callback
               (lambda (canvas dc1)
                 (send dc1 set-pen "gray" 0 'transparent)
                 (send dc1 set-brush "gray" 'solid)
-                (send dc1 draw-rectangle 0 0 800 200)
-                (send dc1 set-scale 3 3)
+                (send dc1 draw-rectangle 0 0 800 100)
+                (send dc1 set-scale 2 2)
                 (send dc1 set-text-foreground "black")
-                (send dc1 draw-text "BusCEMinas!" 0 0))])
+                (send dc1 draw-text "BusCEMinas!" 10 10))])
+
+; Contador de minas
+(define contador-minas-label (new message%
+                                  [parent info-panel]
+                                  [label "Minas: 0"]
+                                  [min-width 120]))
 
 ; funcion auxiliar para generar una secuencia de numeros
 (define (rango-lista inicio fin)
@@ -70,7 +81,8 @@
                             (define label-actual (send b get-label))
                             (cond
                               [(equal? label-actual "F") ; si tiene bandera, quitarla
-                              (send b set-label "")]
+                              (send b set-label "")
+                              (actualizar-contador-minas total-minas celdas contador-minas-label)]
                               [(equal? label-actual "") ; si la celda está vacía, mostrar opciones
                               (define respuesta 
                                 (message-box/custom "Seleccionar Acción" 
@@ -90,7 +102,8 @@
                                         (when (= num-adyacentes 0)
                                           (auto-descubrir-vecinos indice celdas))))]
                                 [(equal? respuesta 2) ; si el usuario eligió bandera
-                                  (send b set-label "F")])]
+                                  (send b set-label "F")
+                                  (actualizar-contador-minas total-minas celdas contador-minas-label)])]
                               [else ; si ya está descubierta, no hacer nada
                               (void)]))])
              (crear-boton-fila (+ j 1)))]))
@@ -157,6 +170,34 @@
        (procesar-lista-vecinos (cdr lista-vecinos))]))
   
   (procesar-lista-vecinos vecinos-coords))
+
+; Función para contar banderas actuales en el tablero
+(define (contar-banderas-actuales celdas-matriz)
+  (define (contar-banderas-columna lista-botones)
+    (cond
+      [(null? lista-botones) 0]
+      [else
+       (define boton (car lista-botones))
+       (define label (send boton get-label))
+       (+ (if (equal? label "F") 1 0)
+          (contar-banderas-columna (cdr lista-botones)))]))
+  
+  (define (contar-todas-columnas lista-columnas)
+    (cond
+      [(null? lista-columnas) 0]
+      [else
+       (+ (contar-banderas-columna (car lista-columnas))
+          (contar-todas-columnas (cdr lista-columnas)))]))
+  
+  (contar-todas-columnas celdas-matriz))
+
+; Función para actualizar el contador de minas
+(define (actualizar-contador-minas total-minas celdas-matriz label-contador)
+  (define banderas-actuales (contar-banderas-actuales celdas-matriz))
+  (define minas-restantes (- total-minas banderas-actuales))
+  (send label-contador set-label (format "Minas: ~a" minas-restantes)))
+
+(actualizar-contador-minas total-minas celdas contador-minas-label)
 
 ; retornar el panel
   game-panel)
