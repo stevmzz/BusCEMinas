@@ -68,12 +68,12 @@
     [else (cons inicio (rango-lista (+ inicio 1) fin))]))
 
 ; funcion para crear botones de una columna
-(define (crear-botones-columna col-panel i tamaño_filas mi-tablero)
+(define (crear-botones-columna col-panel i tamaño_filas mi-tablero tamaño_columnas)
   (define (crear-boton-fila j)
     (cond
       [(>= j tamaño_filas) '()]
       [else
-       (define indice (+ (* i tamaño_filas) j))
+       (define indice (+ (* j tamaño_columnas) i))
        (define celda-datos (elemento mi-tablero indice))
        (define es-mina (mine celda-datos))
        (define num-adyacentes (second celda-datos))
@@ -123,7 +123,7 @@
     [(>= i tamaño_columnas) '()]
     [else
      (define col-panel (new vertical-panel% [parent lower-half]))
-     (define botones-columna (crear-botones-columna col-panel i tamaño_filas mi-tablero))
+     (define botones-columna (crear-botones-columna col-panel i tamaño_filas mi-tablero tamaño_columnas))
      (cons botones-columna 
            (crear-todas-columnas (+ i 1) tamaño_columnas tamaño_filas lower-half mi-tablero))]))
 
@@ -132,16 +132,16 @@
   (crear-todas-columnas 0 tamaño_columnas tamaño_filas lower-half mi-tablero))
 
 ; funcion para obtener un botón especifico de la matriz de botones
-(define (obtener-boton celdas indice tamaño_filas)
-  (define fila (quotient indice tamaño_filas))
-  (define col (remainder indice tamaño_filas))
-  (define lista-columna (elemento celdas fila))
-  (elemento lista-columna col))
+(define (obtener-boton celdas indice tamaño_columnas)
+  (define fila (quotient indice tamaño_columnas))
+  (define col (remainder indice tamaño_columnas))
+  (define lista-columna (elemento celdas col))
+  (elemento lista-columna fila))
 
 ; funcion recursiva para descubrir automaticamente celdas vecinas
 (define (auto-descubrir-vecinos indice-inicial celdas)
   (define fila (quotient indice-inicial tamaño_columnas))
-  (define col (remainder indice-inicial tamaño_filas))
+  (define col (remainder indice-inicial tamaño_columnas))
   
   ; obtener coordenadas de vecinos usando la funcion existente
   (define vecinos-coords (vecinos fila col tamaño_filas tamaño_columnas))
@@ -150,8 +150,8 @@
   (define (procesar-vecino vecino-coord)
     (define v-fila (first vecino-coord))
     (define v-col (second vecino-coord))
-    (define v-indice (+ (* v-fila tamaño_filas) v-col))
-    (define v-boton (obtener-boton celdas v-indice tamaño_filas))
+    (define v-indice (+ (* v-fila tamaño_columnas) v-col))
+    (define v-boton (obtener-boton celdas v-indice tamaño_columnas))
     (define v-label (send v-boton get-label))
     
     ; si no está descubierto, descubrirlo
