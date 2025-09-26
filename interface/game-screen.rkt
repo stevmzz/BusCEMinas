@@ -54,6 +54,13 @@
                                   [label "Minas: 0"]
                                   [min-width 120]))
 
+; Botón para volver al menú
+(define boton-menu (new button%
+                        [parent info-panel]
+                        [label "Volver al Menú"]
+                        [callback (lambda (b e)
+                                    (callback-volver))]))                                  
+
 ; funcion auxiliar para generar una secuencia de numeros
 (define (rango-lista inicio fin)
   (cond
