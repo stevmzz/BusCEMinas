@@ -67,10 +67,28 @@
                   [parent col-panel]
                   [min-height 60]
                   [callback (lambda (b event)
-                            ; al hacer clic, mostrar los datos reales de la celda
-                            (if (= es-mina 1)
-                                (send b set-label "MINA")
-                                (send b set-label (number->string num-adyacentes))))])
+                            (define label-actual (send b get-label))
+                            (cond
+                              [(equal? label-actual "F") ; si tiene bandera, quitarla
+                              (send b set-label "")]
+                              [(equal? label-actual "") ; si la celda está vacía, mostrar opciones
+                              (define respuesta 
+                                (message-box/custom "Seleccionar Acción" 
+                                                  "¿Qué deseas hacer con esta celda?"
+                                                  "Descubrir" 
+                                                  "Bandera" 
+                                                  #f))
+                              (cond
+                                [(equal? respuesta 1) ; si el usuario eligió descubrir
+                                  (if (= es-mina 1)
+                                      (begin
+                                        (send b set-label "MINA")
+                                        (message-box "¡GAME OVER!" "¡Encontraste una mina!" #f '(ok)))
+                                      (send b set-label (number->string num-adyacentes)))]
+                                [(equal? respuesta 2) ; si el usuario eligió bandera
+                                  (send b set-label "F")])]
+                              [else ; si ya está descubierta, no hacer nada
+                              (void)]))])
              (crear-boton-fila (+ j 1)))]))
   
   (crear-boton-fila 0))
