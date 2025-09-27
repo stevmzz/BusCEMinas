@@ -7,8 +7,8 @@
 ; ventana principal
 (define frame (new frame%
                    [label "BusCEMinas"]
-                   [width 350]
-                   [height 950]))
+                   [width 1150]
+                   [height 850]))
 
 ; contenedor para las pantallas
 (define container (new panel%

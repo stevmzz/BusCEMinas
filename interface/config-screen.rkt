@@ -1,66 +1,134 @@
 #lang racket/gui
 
-; funcion para crear la pantalla de configuracion
+; funcion principal exportada para crear la interfaz de configuracion
 (provide crear-pantalla-config)
-(provide (all-defined-out))
 
-;Lista de opciones para tamaño de tablero y dificultad
-
-(define tamaño_tablero '("8" "9" "10" "11" "12" "13" "14" "15"))
-(define opciones_dificultad '("facil" "medio" "dificil"))
+; listas de opciones disponibles para configurar el juego
+(define tamaño-tablero '("8" "9" "10" "11" "12" "13" "14" "15"))
+(define opciones-dificultad '("facil" "medio" "dificil"))
 
 (define (crear-pantalla-config parent-container callback-boton)
-
   
-  ; panel principal 
-  (define config-panel (new horizontal-panel%
-                           [parent parent-container]
-                           [alignment '(center center)]))
-
-  ; Menu para escoger el tamaño de las filas del tablero
-  (define celdas_filas (new choice%
-                          [parent config-panel]
-                          [label "filas"]
-                          [style '(vertical-label)]
-                          [choices tamaño_tablero]))
+  ; contenedor principal que organiza todos los elementos verticalmente
+  (define main-panel (new vertical-panel%
+                         [parent parent-container]
+                         [alignment '(center center)]
+                         [spacing 20]
+                         [border 25]))
   
-
-  ; Menu para escoger el tamaño de las columnas del tablero
-  (define celdas_columnas (new choice%
-                          [parent config-panel]
-                          [label "columnas"]
-                          [style '(vertical-label)] 
-                          [choices tamaño_tablero]))
-   ; Menu para escoger el tamaño de las columnas del tablero
-  (define tablero_dificultad (new choice%
-                          [parent config-panel]
-                          [label "dificultad"]
-                          [style '(vertical-label)] 
-                          [choices opciones_dificultad]))
-
-  (define (elemento lista index)
-    (cond ( (null? lista)#f)
-          ((equal? index 0)
-           (car lista))
-          (else (elemento (cdr lista) (- index 1)))))
+  ; seccion del titulo principal del juego
+  (define title-panel (new horizontal-panel%
+                          [parent main-panel]
+                          [alignment '(center center)]
+                          [stretchable-height #f]))
   
-  ; boton para ir al juego
-  (define boton (new button%
-                    [parent config-panel]
-                    [label "jugar"]
-                    [callback (lambda (b e)
-                                (define filas_indice (send celdas_filas get-selection))
-                                (define columnas_indice (send celdas_columnas get-selection))
-                                (define dificultad_indice (send tablero_dificultad get-selection))
-                                
-                                (define filas_tamaño (elemento tamaño_tablero filas_indice))
-                                (define columnas_tamaño (elemento tamaño_tablero columnas_indice))
-                                (define dificultad (elemento opciones_dificultad dificultad_indice))
-
-                                (callback-boton filas_tamaño columnas_tamaño dificultad))]))
-
-
-
+  ; etiqueta con el nombre del juego centrada
+  (new message%
+       [parent title-panel]
+       [label "BusCEMinas"]
+       [stretchable-height #f])
   
-  ; retornar el panel
-  config-panel)
+  ; subtitulo explicativo de la pantalla actual
+  (new message%
+       [parent main-panel]
+       [label "Configuración del Tablero"]
+       [stretchable-height #f])
+  
+  ; separador visual entre titulo y controles
+  (new message% [parent main-panel] [label ""] [stretchable-height #f])
+  
+  ; contenedor horizontal para agrupar controles de dimensiones
+  (define size-controls (new horizontal-panel%
+                            [parent main-panel]
+                            [alignment '(center center)]
+                            [spacing 40]
+                            [stretchable-height #f]))
+  
+  ; seccion para seleccionar numero de filas del tablero
+  (define filas-container (new vertical-panel%
+                              [parent size-controls]
+                              [alignment '(center center)]
+                              [spacing 5]
+                              [stretchable-width #f]))
+  
+  ; etiqueta descriptiva del selector de filas
+  (new message% [parent filas-container] [label "Filas"])
+  ; menu desplegable con opciones de 8 a 15 filas
+  (define celdas-filas (new choice%
+                           [parent filas-container]
+                           [label ""]
+                           [choices tamaño-tablero]
+                           [selection 0])) ; seleccion inicial en la primera opcion
+  
+  ; seccion para seleccionar numero de columnas del tablero
+  (define columnas-container (new vertical-panel%
+                                 [parent size-controls]
+                                 [alignment '(center center)]
+                                 [spacing 5]
+                                 [stretchable-width #f]))
+  
+  ; etiqueta descriptiva del selector de columnas
+  (new message% [parent columnas-container] [label "Columnas"])
+  ; menu desplegable con opciones de 8 a 15 columnas
+  (define celdas-columnas (new choice%
+                              [parent columnas-container]
+                              [label ""]
+                              [choices tamaño-tablero]
+                              [selection 0])) ; seleccion inicial en la primera opcion
+  
+  ; separador visual entre controles de tamaño y dificultad
+  (new message% [parent main-panel] [label ""] [stretchable-height #f])
+  
+  ; contenedor horizontal para centrar el selector de dificultad
+  (define difficulty-panel (new horizontal-panel%
+                               [parent main-panel]
+                               [alignment '(center center)]
+                               [stretchable-height #f]))
+  
+  ; contenedor vertical para organizar etiqueta y selector de dificultad
+  (define difficulty-container (new vertical-panel%
+                                   [parent difficulty-panel]
+                                   [alignment '(center center)]
+                                   [spacing 5]
+                                   [stretchable-width #f]))
+  
+  ; etiqueta descriptiva del selector de dificultad
+  (new message% [parent difficulty-container] [label "Nivel de Dificultad"])
+  ; menu desplegable con tres niveles de dificultad
+  (define tablero-dificultad (new choice%
+                                 [parent difficulty-container]
+                                 [label ""]
+                                 [choices opciones-dificultad]
+                                 [selection 0])) ; seleccion inicial en facil
+  
+  ; espaciador flexible que empuja el boton hacia la parte inferior
+  (new message% [parent main-panel] [label ""] [stretchable-height #f])
+  
+  ; contenedor horizontal para centrar el boton de inicio
+  (define button-panel (new horizontal-panel%
+                           [parent main-panel]
+                           [alignment '(center center)]
+                           [stretchable-height #f]))
+  
+  ; boton principal que inicia el juego con la configuracion seleccionada
+  (define boton-jugar (new button%
+                          [parent button-panel]
+                          [label "Iniciar Juego"]
+                          [min-width 120]
+                          [min-height 35]
+                          [callback (lambda (b e)
+                                    ; obtener indices de las selecciones actuales
+                                    (define filas-indice (send celdas-filas get-selection))
+                                    (define columnas-indice (send celdas-columnas get-selection))
+                                    (define dificultad-indice (send tablero-dificultad get-selection))
+                                    
+                                    ; convertir indices a valores usando list-ref de racket
+                                    (define filas-tamaño (list-ref tamaño-tablero filas-indice))
+                                    (define columnas-tamaño (list-ref tamaño-tablero columnas-indice))
+                                    (define dificultad (list-ref opciones-dificultad dificultad-indice))
+                                    
+                                    ; ejecutar callback con los parametros seleccionados
+                                    (callback-boton filas-tamaño columnas-tamaño dificultad))]))
+  
+  ; devolver el panel principal como resultado de la funcion
+  main-panel)
