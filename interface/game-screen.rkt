@@ -98,23 +98,23 @@
     (if modo-bandera?
         ; logica para modo bandera: colocar/quitar banderas
         (cond
-          [(equal? label-actual "F") ; si ya tiene bandera, quitarla
+          [(equal? label-actual "⚑") ; si ya tiene bandera, quitarla
            (send boton set-label "")
            (actualizar-contador-minas)]
           [(equal? label-actual "") ; si esta vacia, colocar bandera
-           (send boton set-label "F")
+           (send boton set-label "⚑")
            (actualizar-contador-minas)]
           [else (void)]) ; si ya esta descubierta, no hacer nada
         
         ; logica para modo descubrir: revelar contenido de celdas
         (cond
-          [(equal? label-actual "F") ; no permitir descubrir celdas con bandera
+          [(equal? label-actual "⚑") ; no permitir descubrir celdas con bandera
            (void)]
           [(equal? label-actual "") ; celda no descubierta, proceder a revelar
            (if (= es-mina 1)
                ; si es mina, mostrar "MINA" y terminar juego
                (begin
-                 (send boton set-label "MINA"))
+                 (send boton set-label "💣"))
                ; si no es mina, mostrar numero de minas adyacentes
                (begin
                  (send boton set-label (number->string num-adyacentes))
@@ -247,7 +247,7 @@
          (define boton (car lista-botones))
          (define label (send boton get-label))
          ; sumar 1 si es bandera, 0 si no, y continuar con el resto
-         (+ (if (equal? label "F") 1 0)
+         (+ (if (equal? label "⚑") 1 0)
             (contar-banderas-columna (cdr lista-botones)))]))
     
     ; funcion auxiliar para iterar sobre todas las columnas
