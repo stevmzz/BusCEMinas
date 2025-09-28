@@ -24,6 +24,7 @@
                          [parent parent-container]
                          [spacing 10]))
   
+  
   ; === seccion superiror con titulo y controles ===
   
   ; panel que contiene el titulo y los controles del juego
@@ -88,6 +89,27 @@
                             [alignment '(center center)]
                             [spacing 2]
                             [border 10]))
+
+  ;Contenedor de la ventana que indica si el jugador perdió/ganó
+  (define fin-juego-frame (new frame% [label "fin de juego"]))
+
+
+  ;Función para indicar jugador que perdió
+
+    (define (partida_perdida)
+      (define aviso_perder (new dialog%
+                                [label "FIN DE PARTIDA"]
+                                [parent fin-juego-frame]))
+      (new message%
+           [parent aviso_perder]
+           [label "PERDISTE"])
+      (new button% [parent aviso_perder]
+           [label "Volver al Menú principal"]
+           [callback (lambda (b e)
+                       (callback-volver)
+                       (send aviso_perder show #f))])
+      (send aviso_perder show #t))
+
   
   ; funcion que maneja los clicks en las celdas segun el modo activo
   (define (procesar-click-celda boton es-mina num-adyacentes indice)
@@ -114,7 +136,8 @@
            (if (= es-mina 1)
                ; si es mina, mostrar "MINA" y terminar juego
                (begin
-                 (send boton set-label "💣"))
+                 (send boton set-label "💣")
+                 (partida_perdida))
                ; si no es mina, mostrar numero de minas adyacentes
                (begin
                  (send boton set-label (number->string num-adyacentes))
