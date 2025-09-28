@@ -13,8 +13,9 @@
   
   ; crear el tablero usando la logica del generador
   (define mi-tablero (tablero tamaño-filas tamaño-columnas dificultad))
-  ; calcular el numero total de minas colocadas en el tablero
+  ; calcular el numero total de minas y celdas colocadas en el tablero
   (define total-minas (contar-minas-tablero mi-tablero))
+  
   
   ; variable de estado para controlar el modo de juego actual
   (define modo-bandera? #f)  ; #f = modo descubrir, #t = modo bandera
@@ -53,11 +54,18 @@
                          [alignment '(center center)]
                          [spacing 20]
                          [stretchable-height #f]))
+
   
   ; etiqueta que muestra el contador de minas restantes
   (define contador-minas-label (new message%
                                    [parent info-panel]
                                    [label "Minas: 0"]
+                                   [min-width 120]))
+
+   ; etiqueta que muestra el contador de celdas sin descubrir
+  (define contador-no-descubiertos-label (new message%
+                                   [parent info-panel]
+                                   [label "Sin descubrir: 0"]
                                    [min-width 120]))
   
   ; boton que permite alternar entre modo descubrir y modo bandera
@@ -96,7 +104,7 @@
 
   ;Función para indicar jugador que perdió
 
-    (define (partida_perdida)
+  (define (partida_perdida)
       (define aviso_perder (new dialog%
                                 [label "FIN DE PARTIDA"]
                                 [parent fin-juego-frame]))
@@ -109,6 +117,22 @@
                        (callback-volver)
                        (send aviso_perder show #f))])
       (send aviso_perder show #t))
+
+  ;Función para indicar jugador que ganó
+
+  (define (partida_ganada)
+      (define aviso_ganar (new dialog%
+                                [label "FIN DE PARTIDA"]
+                                [parent fin-juego-frame]))
+      (new message%
+           [parent aviso_ganar]
+           [label "GANASTE"])
+      (new button% [parent aviso_ganar]
+           [label "Volver al Menú principal"]
+           [callback (lambda (b e)
+                       (callback-volver)
+                       (send aviso_ganar show #f))])
+      (send aviso_ganar show #t))
 
   
   ; funcion que maneja los clicks en las celdas segun el modo activo
@@ -137,13 +161,17 @@
                ; si es mina, mostrar "MINA" y terminar juego
                (begin
                  (send boton set-label "💣")
+                 ;Condición perder
                  (partida_perdida))
                ; si no es mina, mostrar numero de minas adyacentes
                (begin
                  (send boton set-label (number->string num-adyacentes))
                  ; si no hay minas adyacentes, descubrir vecinos automaticamente
                  (when (= num-adyacentes 0)
-                   (auto-descubrir-vecinos indice))))]
+                   (auto-descubrir-vecinos indice))
+                 ;Verificar si jugador ganó
+                 (actualizar-contador-sin-descubiertos)
+                 ))]
           [else (void)]))) ; celda ya descubierta, ignorar click
   
   ; funcion recursiva para crear todos los botones de una columna
@@ -259,10 +287,10 @@
     ; iniciar el procesamiento de todos los vecinos
     (procesar-lista-vecinos vecinos-coords))
   
-  ; funcion recursiva para contar el numero actual de banderas colocadas
-  (define (contar-banderas-actuales)
+  ; funcion recursiva para contar el numero actual de celdas no descubiertas y banderas colocadas
+  (define (contar-datos-actuales icono)
     ; funcion auxiliar para contar banderas en una columna de botones
-    (define (contar-banderas-columna lista-botones)
+    (define (contar-datos-columna lista-botones)
       (cond
         [(null? lista-botones) 0] ; caso base: no mas botones en la columna
         [else
@@ -270,8 +298,8 @@
          (define boton (car lista-botones))
          (define label (send boton get-label))
          ; sumar 1 si es bandera, 0 si no, y continuar con el resto
-         (+ (if (equal? label "⚑") 1 0)
-            (contar-banderas-columna (cdr lista-botones)))]))
+         (+ (if (equal? label icono) 1 0)
+            (contar-datos-columna (cdr lista-botones)))]))
     
     ; funcion auxiliar para iterar sobre todas las columnas
     (define (contar-todas-columnas lista-columnas)
@@ -279,7 +307,7 @@
         [(null? lista-columnas) 0] ; caso base: no mas columnas
         [else
          ; sumar banderas de la primera columna y continuar recursivamente
-         (+ (contar-banderas-columna (car lista-columnas))
+         (+ (contar-datos-columna (car lista-columnas))
             (contar-todas-columnas (cdr lista-columnas)))]))
     
     ; iniciar conteo desde todas las columnas del tablero
@@ -288,13 +316,25 @@
   ; funcion para actualizar la visualizacion del contador de minas
   (define (actualizar-contador-minas)
     ; calcular minas restantes basado en banderas colocadas
-    (define banderas-actuales (contar-banderas-actuales))
+    (define banderas-actuales (contar-datos-actuales "⚑"))
     (define minas-restantes (- total-minas banderas-actuales))
     ; actualizar texto del contador en la interfaz
     (send contador-minas-label set-label (format "Minas: ~a" minas-restantes)))
+
+  ; funcion para actualizar la visualizacion del contador de celdas sin descubrir y condición de victoria
+  (define (actualizar-contador-sin-descubiertos)
+    ; calcular celdas sin descubrir restantes basado en 
+    (define no-descubiertos-actuales (contar-datos-actuales ""))
+    (define banderas-actuales (contar-datos-actuales "⚑"))
+    (define no-descubiertos-restantes (+ no-descubiertos-actuales banderas-actuales))
+    (when (= no-descubiertos-restantes total-minas) (partida_ganada))
+    ; actualizar texto del contador en la interfaz
+    (send contador-no-descubiertos-label set-label (format "Sin descubrir: ~a" no-descubiertos-restantes)))
   
-  ; configurar estado inicial del contador al crear la pantalla
+  ; configurar estado inicial de los contadores al crear la pantalla
   (actualizar-contador-minas)
+  (actualizar-contador-sin-descubiertos)
+  
   
   ; devolver el panel principal como resultado de la funcion
   game-panel)

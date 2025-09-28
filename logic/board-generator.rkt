@@ -168,6 +168,7 @@
   ; iniciar iteracion desde la primera posicion
   (iterar-tablero 0 tablero)) 
 
+
 ; funcion principal para generar tablero completo con minas y conteos
 (define (tablero filas columnas nivel)
   ; calcular numero total de celdas
@@ -189,6 +190,8 @@
   (define tablero-con-minas (colocar-minas tablero-vacio filas columnas num-minas))
   ; paso 3: calcular numeros adyacentes para cada celda
   (calcular-adyacentes tablero-con-minas filas columnas))
+
+
   
 ; funcion recursiva para contar total de minas en tablero generado
 (define (contar-minas-tablero tablero)
